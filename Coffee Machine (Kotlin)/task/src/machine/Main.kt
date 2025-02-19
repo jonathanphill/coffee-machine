@@ -1,131 +1,142 @@
 package machine
 
 fun main() {
-    var waterQty = 0
-    var milkQty = 0
-    var coffeeBeans = 0
-    var numberOfCups = 0
+    var coffeeMachine = CoffeeMachine()
+
+    while (coffeeMachine.isOn) {
+        coffeeMachine.askActionMenu()
+        val userInput = readln()
+        when (userInput) {
+            "remaining" -> coffeeMachine.machineStatus()
+            "fill" -> coffeeMachine.fillMenu()
+            "buy" -> coffeeMachine.buy()
+            "take" -> coffeeMachine.give()
+            "exit" -> coffeeMachine.isOn = false
+            else -> println("Incorrect action selected")
+        }
 
 
-    val initialState = mutableMapOf(
-        "waterQty" to 400,
-        "milkQty" to 540,
-        "coffeeBeans" to 120,
-        "numberOfCups" to 9,
-        "openingBalance" to 550
-    )
-    val currentState = machineStatus(initialState)
-    println()
-    println("Write action(buy, fill, take):")
-    val userInput = readln()
-    var coffeeTypeOption = 0
-    if (userInput == "buy") {
-        println("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino: ")
+    }
+
+
+}
+
+class CoffeeMachine {
+    private var waterQty: Int = 400
+    private var milkQty: Int = 540
+    private var coffeeBeans: Int = 120
+    private var cups: Int = 9
+    private var balance: Int
+    var isOn: Boolean
+
+    init {
+        this.balance = 550
+        this.isOn = true
+    }
+
+    fun machineStatus() {
+        println()
+        println("The coffee machine has:")
+        println("${this.waterQty} ml of water")
+        println("${this.milkQty} ml of milk")
+        println("${this.coffeeBeans} g of coffee beans")
+        println("${this.cups} disposable cups")
+        println("$${this.balance} of money")
+        println()
+    }
+
+    fun askActionMenu() {
+        println("Write action (buy, fill, take, remaining, exit):")
+    }
+
+    fun fillMenu() {
         try {
-            coffeeTypeOption = readln().toInt()
-            when (coffeeTypeOption) {
-
-                1 -> makeEspresso(currentState)
-                2 -> makeLatte(currentState)
-                3 -> makeCappuccino(currentState)
-            }
+            println()
+            println("Write how many ml of water you want to add:")
+            this.waterQty += readln().toInt()
+            println("Write how many ml of milk you want to add: ")
+            this.milkQty += readln().toInt()
+            println("Write how many grams of coffee beans you want to add:")
+            this.coffeeBeans += readln().toInt()
+            println("Write how many disposable cups you want to add: ")
+            this.cups += readln().toInt()
+            println()
         } catch (e: Exception) {
             println(e.message)
         }
+    }
 
-    } else if (userInput == "fill") {
-
-        println("Write how many ml of water you want to add:")
-        waterQty = readln().toInt()
-        println("Write how many ml of milk you want to add:")
-        milkQty = readln().toInt()
-        println("Write how many grams of coffee beans you want to add:")
-        coffeeBeans = readln().toInt()
-        println("Write how many disposable cups you want to add:")
-        numberOfCups = readln().toInt()
+    fun buy() {
         println()
-        machineStatus(fillMachine(initialState, waterQty, milkQty, coffeeBeans, numberOfCups))
+        println("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:")
+        try {
+            val userInput = readln()
+            if (userInput == "back") {
+                println()
+                return
+            }
+            when (userInput.toInt()) {
+                1 -> makeEspresso()
+                2 -> makeLatte()
+                3 -> makeCappuccino()
+            }
 
-    } else if (userInput == "take") {
-        println("I gave you $${initialState.getValue("openingBalance")}")
+        } catch (e: Exception) {
+            println(e.message)
+        }
+    }
+
+    private fun makeBeverage(waterQty: Int, milkQty: Int, coffeeBeans: Int, cost: Int) {
+        if (this.waterQty >= waterQty && this.coffeeBeans >= coffeeBeans && this.milkQty >= milkQty) {
+            this.waterQty -= waterQty
+            this.coffeeBeans -= coffeeBeans
+            this.milkQty -= milkQty
+            this.balance += cost
+            this.cups -= 1
+            println("I have enough resources, making you a coffee!")
+        } else if (this.waterQty < waterQty) {
+            println("Sorry, not enough water!")
+        } else if (this.coffeeBeans < coffeeBeans) {
+            println("Sorry, not enough coffee beans!")
+        } else if (this.milkQty < milkQty) {
+            println("Sorry, not enough milk!")
+        }
+
         println()
-        initialState.put("openingBalance", 0)
-        machineStatus(initialState)
+    }
+
+    private fun makeCappuccino() {
+        val waterQty = 200
+        val coffeeBeans = 12
+        val milkQty = 100
+        val cost = 6
+        makeBeverage(waterQty, milkQty, coffeeBeans, cost)
 
     }
 
-}
 
-fun fillMachine(
-    currentState: MutableMap<String, Int>,
-    waterQty: Int,
-    milkQty: Int,
-    coffeeBeans: Int,
-    cup: Int
-): MutableMap<String, Int> {
-    return currentState.toMutableMap().apply {
-        // Update water quantity
-        put("waterQty", getValue("waterQty") + waterQty)
-        // Update milk quantity
-        put("milkQty", getValue("milkQty") + milkQty)
-        // Update coffee beans quantity
-        put("coffeeBeans", getValue("coffeeBeans") + coffeeBeans)
-        // Increase the number of cups available
-        put("numberOfCups", getValue("numberOfCups") + cup)
+    private fun makeLatte() {
+        val waterQty = 350
+        val coffeeBeans = 20
+        val milkQty = 75
+        val cost = 7
+        makeBeverage(waterQty, milkQty, coffeeBeans, cost)
+
     }
-}
 
 
-fun makeDrink(
-    currentState: MutableMap<String, Int>,
-    waterQty: Int,
-    milkQty: Int,
-    coffeeBeans: Int,
-    cost: Int
-): MutableMap<String, Int> {
-    return currentState.toMutableMap().apply {
-        // Update water quantity
-        put("waterQty", getValue("waterQty") - waterQty)
-        // Update milk quantity
-        put("milkQty", getValue("milkQty") - milkQty)
-        // Update coffee beans quantity
-        put("coffeeBeans", getValue("coffeeBeans") - coffeeBeans)
-        // Decrease the number of cups available
-        put("numberOfCups", getValue("numberOfCups") - 1)
-        // Add to the opening balance since the drink was sold
-        put("openingBalance", getValue("openingBalance") + cost)
+    private fun makeEspresso() {
+        val waterQty = 250
+        val coffeeBeans = 16
+        val milkQty = 0
+        val cost = 4
+        makeBeverage(waterQty, milkQty, coffeeBeans, cost)
     }
-}
 
-
-fun makeLatte(currentState: MutableMap<String, Int>) {
-    val updatedState = makeDrink(currentState, 350, 75, 20, 7)
-    println()
-    machineStatus(updatedState)
-}
-
-fun makeCappuccino(currentState: MutableMap<String, Int>) {
-    val updatedState = makeDrink(currentState, 200, 100, 12, 6)
-    println()
-    machineStatus(updatedState)
-}
-
-fun makeEspresso(currentState: MutableMap<String, Int>) {
-    val updatedState = makeDrink(currentState, 250, 0, 16, 4)
-    println()
-    machineStatus(updatedState)
-}
-
-fun machineStatus(coffeeMachineState: MutableMap<String, Int>): MutableMap<String, Int> {
-    var currentSate = mutableMapOf<String, Int>()
-    currentSate = coffeeMachineState
-    println("The coffee machine has:")
-    println("${coffeeMachineState["waterQty"]} ml of water")
-    println("${coffeeMachineState["milkQty"]} ml of milk")
-    println("${coffeeMachineState["coffeeBeans"]} g of coffee beans")
-    println("${coffeeMachineState["numberOfCups"]} disposable cups")
-    println("$${coffeeMachineState["openingBalance"]} of money")
-
-    return currentSate
+    fun give() {
+        println()
+        println("I gave you $${this.balance}")
+        this.balance = 0
+    }
 
 }
